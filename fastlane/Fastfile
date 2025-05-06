@@ -24,12 +24,13 @@ platform :android do
 
   # Function to extract version code and version name from build.gradle
   def extract_version_info
-    version_name = sh("grep versionName app/build.gradle.kts | awk -F '\"' '{ print $2 }'")
-    version_code = sh("grep versionCode app/build.gradle.kts | awk '{ print $2 }'")
+    output = gradle(task: ":app:printVersionInfo")
+
+    version_code = output[/VERSION_CODE=(\d+)/, 1]
+    version_name = output[/VERSION_NAME=([^\s]+)/, 1]
 
     { version_code: version_code, version_name: version_name }
   end
-
 
   desc "Submit a App to Firebase App Distribution"
   lane :distribute_firebase do
@@ -53,11 +54,32 @@ platform :android do
     version_info = extract_version_info
     release_name = "#{version_info[:version_code]}(#{version_info[:version_name]})"
     download_url = result[:testingUri]
+
+    slack(
+        message: "Build Successful :rocket:",
+        payload: {  # Optional, lets you specify any number of your own Slack attachments.
+            "Build Version" => release_name,
+            "Download URL" => download_url,
+        },
+        success: true,
+        slack_url: ENV['SLACK_WEBHOOK_URL'],
+    )
   end
 
   desc "Deploy a new version to the Google Play"
   lane :deploy do
     gradle(task: "clean assembleRelease")
     upload_to_play_store
+  end
+
+  error do |lane, exception|
+    # Handle the error here
+    puts "An error occurred in lane #{lane}: #{exception.message}"
+    # send notification to slack
+    slack(
+      message: "An error occurred in lane #{lane}: #{exception.message}",
+      success: false,
+      slack_url: ENV['SLACK_WEBHOOK_URL'],
+    )
   end
 end
