@@ -40,6 +40,13 @@ android {
     }
 }
 
+tasks.register("printVersionInfo") {
+    doLast {
+        println("VERSION_CODE=${android.defaultConfig.versionCode}")
+        println("VERSION_NAME=${android.defaultConfig.versionName}")
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
