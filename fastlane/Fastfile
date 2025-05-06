@@ -1,0 +1,63 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+fastlane_require 'dotenv'
+
+default_platform(:android)
+
+platform :android do
+
+  before_all do
+      Dotenv.overload '.env.secret'
+  end
+
+  # Function to extract version code and version name from build.gradle
+  def extract_version_info
+    version_name = sh("grep versionName app/build.gradle.kts | awk -F '\"' '{ print $2 }'")
+    version_code = sh("grep versionCode app/build.gradle.kts | awk '{ print $2 }'")
+
+    { version_code: version_code, version_name: version_name }
+  end
+
+
+  desc "Submit a App to Firebase App Distribution"
+  lane :distribute_firebase do
+    gradle(task: "clean assembleRelease")
+
+    # Get file path and file name
+    file_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    file_name = file_path.gsub(/\/.*\//, "")
+
+    release_note_information = "branch => #{git_branch} - #{last_git_commit[:commit_hash]} - #{last_git_commit[:message]} "
+    release_note = "#{release_note_information}"
+
+    result = firebase_app_distribution(
+        app: ENV['APP_ID'],
+        groups: "qa-testers",
+        release_notes: "#{release_note}",
+        firebase_cli_token: ENV['FIREBASE_CLI_TOKEN'],
+        apk_path: file_path
+    )
+
+    version_info = extract_version_info
+    release_name = "#{version_info[:version_code]}(#{version_info[:version_name]})"
+    download_url = result[:testingUri]
+  end
+
+  desc "Deploy a new version to the Google Play"
+  lane :deploy do
+    gradle(task: "clean assembleRelease")
+    upload_to_play_store
+  end
+end

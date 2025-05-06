@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000235">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="1: clean assembleRelease" time="11.714657">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: git_branch" time="0.026638">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="3: last_git_commit" time="0.075207">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="4: last_git_commit" time="0.08149">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="5: firebase_app_distribution" time="17.170784">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="6: grep versionName app/build.gradle.kts | awk -F &apos;&quot;&apos; &apos;{ print $2 }&apos;" time="0.02002">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="7: grep versionCode app/build.gradle.kts | awk &apos;{ print $2 }&apos;" time="0.006734">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>
