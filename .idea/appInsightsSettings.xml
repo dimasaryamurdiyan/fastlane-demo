@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.singaludra.fastlanedemo" />
+                  <option name="mobileSdkAppId" value="1:394269537190:android:85be45d0ce19c0d9789567" />
+                  <option name="projectId" value="fastlane-demo-cce09" />
+                  <option name="projectNumber" value="394269537190" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

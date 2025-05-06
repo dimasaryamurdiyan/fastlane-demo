@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "394269537190",
+    "project_id": "fastlane-demo-cce09",
+    "storage_bucket": "fastlane-demo-cce09.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394269537190:android:85be45d0ce19c0d9789567",
+        "android_client_info": {
+          "package_name": "com.singaludra.fastlanedemo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBLvEckbsmE5Ww2f8Gp_Qc3oMywQI2cP8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
