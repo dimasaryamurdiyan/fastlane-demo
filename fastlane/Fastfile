@@ -23,7 +23,7 @@ platform :android do
   end
 
   # Lane: Distribute app to Firebase App Distribution
-  desc "Submit an app to Firebase App Distribution"
+  desc "Submit an App to Firebase App Distribution"
   lane :distribute_firebase do
     # Build the app
     gradle(task: "clean assembleRelease")
