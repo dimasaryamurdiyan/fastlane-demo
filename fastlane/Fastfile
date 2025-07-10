@@ -1,98 +1,98 @@
 # This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
+# Documentation: https://docs.fastlane.tools
+# Actions: https://docs.fastlane.tools/actions
+# Plugins: https://docs.fastlane.tools/plugins/available-plugins
 
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
 fastlane_require 'dotenv'
 
 default_platform(:android)
 
 platform :android do
-
+  # Load environment variables
   before_all do
-      Dotenv.overload '.env.secret'
+    Dotenv.overload '.env.secret'
   end
 
-  # Function to extract version code and version name from build.gradle
+  # Helper method to extract version info from build.gradle
   def extract_version_info
     output = gradle(task: ":app:printVersionInfo")
-
-    version_code = output[/VERSION_CODE=(\d+)/, 1]
-    version_name = output[/VERSION_NAME=([^\s]+)/, 1]
-
-    { version_code: version_code, version_name: version_name }
+    {
+      version_code: output[/VERSION_CODE=(\d+)/, 1],
+      version_name: output[/VERSION_NAME=([^\s]+)/, 1]
+    }
   end
 
-  desc "Submit a App to Firebase App Distribution"
+  # Lane: Distribute app to Firebase App Distribution
+  desc "Submit an app to Firebase App Distribution"
   lane :distribute_firebase do
-    #build process
+    # Build the app
     gradle(task: "clean assembleRelease")
 
-    # Get file path and file name
+    # Extract APK file path and name
     file_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
     file_name = file_path.gsub(/\/.*\//, "")
 
-    release_note_information = "branch => #{git_branch} - #{last_git_commit[:commit_hash]} - #{last_git_commit[:message]} "
-    release_note = "#{release_note_information}"
+    # Prepare release notes
+    release_note = "branch => #{git_branch} - #{last_git_commit[:commit_hash]} - #{last_git_commit[:message]}"
 
+    # Upload to Firebase
     result = firebase_app_distribution(
-        app: ENV['APP_ID'],
-        groups: "qa-testers",
-        release_notes: "#{release_note}",
-        firebase_cli_token: ENV['FIREBASE_CLI_TOKEN'],
-        apk_path: file_path
+      app: ENV['APP_ID'],
+      groups: "qa-testers",
+      release_notes: release_note,
+      firebase_cli_token: ENV['FIREBASE_CLI_TOKEN'],
+      apk_path: file_path
     )
 
+    # Extract version info and prepare Slack notification
     version_info = extract_version_info
     release_name = "#{version_info[:version_code]}(#{version_info[:version_name]})"
     download_url = result[:testingUri]
 
+    # Notify via Slack
     slack(
-        message: "Build Successful :rocket:",
-        payload: {  # Optional, lets you specify any number of your own Slack attachments.
-            "Build Version" => release_name,
-            "Download URL" => download_url,
-        },
-        success: true,
-        slack_url: ENV['SLACK_WEBHOOK_URL'],
+      message: "Build Successful :rocket:",
+      payload: {
+        "Build Version" => release_name,
+        "Download URL" => download_url
+      },
+      success: true,
+      slack_url: ENV['SLACK_WEBHOOK_URL']
     )
   end
 
+  # Lane: Deploy app to Google Play
   desc "Deploy a new version to the Google Play"
   lane :deploy do
+    # Build the app
     gradle(task: "clean assembleRelease")
+
+    # Upload to Google Play
     upload_to_play_store(
-        track: "internal",
-        skip_upload_apk: true,
-        skip_upload_metadata: true,
-        skip_upload_images: true,
-        skip_upload_screenshots: true,
-        skip_upload_changelogs: true,
-        skip_upload_aab: false,
-        aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
-        release_notes: "branch => #{git_branch} - #{last_git_commit[:commit_hash]} - #{last_git_commit[:message]} ",
-        json_key: ENV['GOOGLE_PLAY_JSON_KEY'],
-        package_name: ENV['PACKAGE_NAME']
-        )
+      track: "internal",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+      skip_upload_aab: false,
+      aab: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+      release_notes: "branch => #{git_branch} - #{last_git_commit[:commit_hash]} - #{last_git_commit[:message]}",
+      json_key: ENV['GOOGLE_PLAY_JSON_KEY'],
+      package_name: ENV['PACKAGE_NAME']
+    )
   end
 
+  # Error handling
   error do |lane, exception|
-    # Handle the error here
-    puts "An error occurred in lane #{lane}: #{exception.message}"
-    # send notification to slack
+    error_message = "An error occurred in lane #{lane}: #{exception.message}"
+
+    # Log error and notify via Slack
+    puts error_message
     slack(
-      message: "An error occurred in lane #{lane}: #{exception.message}",
+      message: error_message,
       success: false,
-      slack_url: ENV['SLACK_WEBHOOK_URL'],
+      slack_url: ENV['SLACK_WEBHOOK_URL']
     )
   end
 end
